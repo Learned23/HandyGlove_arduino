@@ -1,0 +1,145 @@
+#include <Wire.h>
+#include <MPU6050.h>
+#include "BluetoothSerial.h"
+MPU6050 mpu;
+BluetoothSerial SerialBT;
+
+// Definizione dei pin a cui è collegato il sensore di pressione
+const int mignolo = 34;
+const int anulare = 35;
+const int medio = 32;
+const int indice = 33;
+const int pollice = 27;
+
+void setup() {
+  Serial.begin(9600);
+  SerialBT.begin("ESP32test"); // Inizializza il Bluetooth con il nome "ESP32test"
+  Serial.println("Il dispositivo è pronto e in attesa di una connessione Bluetooth");
+  Wire.begin();
+  mpu.initialize();
+
+  Serial.println("Calibrazione in corso...");
+  mpu.CalibrateAccel(6);
+  mpu.CalibrateGyro(6);
+  Serial.println("Calibrazione completata!");
+}
+
+void loop() {
+  // Legge il valore dal sensore di pressione
+  int mignoloValue = analogRead(mignolo);
+  int anulareValue = analogRead(anulare);
+  int medioValue = analogRead(medio);
+  int indiceValue = analogRead(indice);
+  int polliceValue = analogRead(pollice);
+  
+  // Converti il valore in un range più utile (es. 0-100)
+  int flexMignolo = map(mignoloValue, 0, 1023, 0, 100);
+  int flexAnulare = map(anulareValue, 0, 1023, 0, 100);
+  int flexMedio = map(medioValue, 0, 1023, 0, 100);
+  int flexIndice = map(indiceValue, 0, 1023, 0, 100);
+  int flexPollice = map(polliceValue, 0, 1023, 0, 100);
+
+  // Leggi i dati dal MPU6050
+  int16_t ax, ay, az;
+  int16_t gx, gy, gz;
+  mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+
+  // Calcola gli angoli Roll e Pitch
+  double Roll = atan2(ay, az) * RAD_TO_DEG;
+  double Pitch = atan2(ax, sqrt(ay*ay + az*az)) * RAD_TO_DEG;
+
+  /*Serial.println("--------------------------");
+  Serial.print("Valore Mignolo: ");
+  Serial.println(flexMignolo);
+  Serial.print("Valore Anulare: ");
+  Serial.println(flexAnulare);
+  Serial.print("Valore Medio: ");
+  Serial.println(flexMedio);
+  Serial.print("Valore Indice: ");
+  Serial.println(flexIndice);
+  Serial.print("Valore Pollice: ");
+  Serial.println(flexPollice);
+  Serial.println("--------------------------");
+  Serial.print("Angolo Roll: ");
+  Serial.println(Roll);
+  Serial.println("Valore Pitch: ");
+  Serial.println(Pitch);*/
+  
+
+  if (SerialBT.hasClient()) {
+    if(flexPollice == 400 && flexIndice != 400 && flexMedio != 400 && flexAnulare != 400 && flexMignolo != 400){
+      SerialBT.println("A");
+    }
+    if(flexPollice != 400 && flexIndice == 400 && flexMedio == 400 && flexAnulare == 400 && flexMignolo == 400){
+      SerialBT.println("B");
+    }
+    if(flexPollice == 400 && flexIndice == 400 && flexMedio == 400 && flexAnulare == 400 && flexMignolo == 400 && Pitch < 50 && Pitch > 25 && Roll > 5 && Roll < 15){
+      SerialBT.println("C");
+    }
+    if(flexPollice != 400 && flexIndice == 400 && flexMedio != 400 && flexAnulare != 400 && flexMignolo != 400 && Pitch >47){
+      SerialBT.println("D");
+    }
+    if(flexPollice != 400 && flexIndice != 400 && flexMedio != 400 && flexAnulare != 400 && flexMignolo != 400){
+      SerialBT.println("E");
+    }
+    if(flexPollice == 400 && flexIndice != 400 && flexMedio == 400 && flexAnulare == 400 && flexMignolo == 400 && Pitch > 47){
+      SerialBT.println("F");
+    }
+    if(flexPollice == 400 && flexIndice == 400 && flexMedio != 400 && flexAnulare != 400 && flexMignolo != 400 && Pitch > 47){
+      SerialBT.println("G");
+    }
+    if((flexPollice == 400 || flexPollice != 400) && flexIndice == 400 && flexMedio == 400 && flexAnulare != 400 && flexMignolo != 400 && Pitch < 45){
+      SerialBT.println("H");
+    }
+    if(flexPollice != 400 && flexIndice != 400 && flexMedio != 400 && flexAnulare != 400 && flexMignolo == 400 && Pitch > 47){
+      SerialBT.println("I");
+    }
+    if(flexPollice != 400 && flexIndice != 400 && flexMedio != 400 && flexAnulare != 400 && flexMignolo == 400 && Roll < 0 && Pitch < 53){
+      SerialBT.println("J");
+    }
+    if(flexPollice == 400 && flexIndice == 400 && flexMedio == 400 && flexAnulare != 400 && flexMignolo != 400 && Pitch > 47){
+      SerialBT.println("K");
+    }
+    if(flexPollice == 400 && flexIndice == 400 && flexMedio != 400 && flexAnulare == 400 && flexMignolo != 400 && Pitch > 47){
+      SerialBT.println("L");
+    }
+    if(flexPollice != 400 && flexIndice != 400 && flexMedio == 400 && flexAnulare != 400 && flexMignolo != 400 && Pitch > 47){
+      SerialBT.println("M");
+    }
+    if(flexPollice != 400 && flexIndice == 400 && flexMedio == 400 && flexAnulare != 400 && flexMignolo != 400 && Pitch > 47){
+      SerialBT.println("N");
+    }
+    if(flexPollice != 400 && flexIndice == 400 && flexMedio == 400 && flexAnulare == 400 && flexMignolo == 400 && Pitch < 50 && Pitch > 25 && Roll > 5 && Roll < 15){
+      SerialBT.println("O");
+    }
+    if(flexPollice == 400 && flexIndice == 400 && flexMedio == 400 && flexAnulare == 400 && flexMignolo == 400 && (Roll >= -30 && Roll <= -40) && (Pitch >= 40 && Pitch <= 50)){
+      SerialBT.println("P");
+    }
+    if(flexPollice == 400 && flexIndice == 400 && flexMedio != 400 && flexAnulare != 400 && flexMignolo != 400 && (Roll >= -30 && Roll <= -35) && (Pitch >= 0 && Pitch <= 10)){
+      SerialBT.println("Q");
+    }
+    if(flexPollice != 400 && flexIndice == 400 && flexMedio == 400 && flexAnulare != 400 && flexMignolo != 400 && Roll > 30){
+      SerialBT.println("R");
+    }
+    if(flexPollice != 400 && flexIndice != 400 && flexMedio != 400 && flexAnulare != 400 && flexMignolo != 400 && Roll > 40){
+      SerialBT.println("S");
+    }
+    if(flexPollice != 400 && flexIndice == 400 && flexMedio != 400 && flexAnulare != 400 && flexMignolo != 400 && Roll > 40){
+      SerialBT.println("T");
+    }
+    if(flexPollice == 400 && flexIndice == 400 && flexMedio == 400 && flexAnulare != 400 && flexMignolo != 400 && Roll > 40){
+      SerialBT.println("U");
+    }
+    if(flexPollice == 400 && flexIndice == 400 && flexMedio != 400 && flexAnulare != 400 && flexMignolo != 400 && Roll > 40){
+      SerialBT.println("V");
+    }
+    if(flexPollice == 400 && flexIndice == 400 && flexMedio == 400 && flexAnulare == 400 && flexMignolo != 400 && (Roll >= 30 && Roll <= 40)){
+      SerialBT.println("W");
+    }
+    if(flexPollice != 400 && flexIndice == 400 && flexMedio == 400 && flexAnulare != 400 && flexMignolo != 400 && Roll < 0 && (Pitch >= 30 && Pitch <= 40)){
+      SerialBT.println("X");
+    }
+    delay(200);
+  }
+}
+    
